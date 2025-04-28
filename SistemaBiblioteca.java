@@ -1,179 +1,185 @@
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class SistemaBiblioteca {
-    private static List<Libro> libros = new ArrayList<>();
-    private static List<Usuario> usuarios = new ArrayList<>();
-    private static List<Bibliotecario> bibliotecarios = new ArrayList<>();
-    private static Scanner scanner = new Scanner(System.in);
+    private List<Libro> libros;
+    private List<Usuario> usuarios;
+    private List<Bibliotecario> bibliotecarios;
 
-    public static void main(String[] args) {
-        inicializarDatos();
+    public SistemaBiblioteca() {
+        libros = new ArrayList<>();
+        usuarios = new ArrayList<>();
+        bibliotecarios = new ArrayList<>();
+        cargarDatos();
+    }
+
+    // Métodos públicos para la interfaz gráfica
+    public void cargarDatos() {
+        libros = PersistenciaDatos.cargarLibros();
+        usuarios = PersistenciaDatos.cargarUsuarios();
         
-        boolean continuar = true;
-        while (continuar) {
-            mostrarMenu();
-            int opcion = scanner.nextInt();
-            scanner.nextLine(); // Limpiar el buffer
-
-            switch (opcion) {
-                case 1:
-                    consultarCatalogo();
-                    break;
-                case 2:
-                    realizarPrestamo();
-                    break;
-                case 3:
-                    devolverLibro();
-                    break;
-                case 4:
-                    agregarLibro();
-                    break;
-                case 5:
-                    agregarUsuario();
-                    break;
-                case 6:
-                    System.out.println("Desea continuar con la iteracion? (s/n)");
-                    continuar = scanner.nextLine().toLowerCase().equals("s");
-                    break;
-                default:
-                    System.out.println("Opcion no valida");
-            }
+        if (libros.isEmpty() && usuarios.isEmpty()) {
+            inicializarDatos();
+        } else {
+            PersistenciaDatos.cargarPrestamos(usuarios, libros);
         }
-        System.out.println("Gracias por usar el Sistema de Biblioteca!");
-        scanner.close();
     }
 
-    private static void mostrarMenu() {
-        System.out.println("\n=== SISTEMA DE BIBLIOTECA ===");
-        System.out.println("1. Consultar catalogo");
-        System.out.println("2. Realizar prestamo");
-        System.out.println("3. Devolver libro");
-        System.out.println("4. Agregar libro");
-        System.out.println("5. Agregar usuario");
-        System.out.println("6. Salir");
-        System.out.print("Seleccione una opcion: ");
+    public void guardarDatos() {
+        PersistenciaDatos.guardarLibros(libros);
+        PersistenciaDatos.guardarUsuarios(usuarios);
+        PersistenciaDatos.guardarPrestamos(usuarios);
     }
 
-    private static void inicializarDatos() {
-        // Agregar algunos datos de prueba
-        libros.add(new Libro("123", "Don Quijote", "Cervantes"));
-        libros.add(new Libro("456", "Cien anos de soledad", "Garcia Marquez"));
+    private void inicializarDatos() {
+        // Agregar libros
+        libros.add(new Libro("123", "Don Quijote", "Miguel de Cervantes"));
+        libros.add(new Libro("456", "Cien años de soledad", "Gabriel Garcia Marquez"));
+        libros.add(new Libro("457", "1984", "George Orwell"));
+        libros.add(new Libro("458", "El Señor de los Anillos", "J.R.R. Tolkien"));
+        libros.add(new Libro("459", "Harry Potter y la Piedra Filosofal", "J.K. Rowling"));
+        libros.add(new Libro("460", "El Principito", "Antoine de Saint-Exupery"));
+        libros.add(new Libro("461", "Crimen y castigo", "Fiodor Dostoievski"));
+        libros.add(new Libro("462", "Orgullo y prejuicio", "Jane Austen"));
+        libros.add(new Libro("463", "La Odisea", "Homero"));
+        libros.add(new Libro("464", "El Alquimista", "Paulo Coelho"));
+        libros.add(new Libro("465", "Rayuela", "Julio Cortazar"));
+        libros.add(new Libro("466", "Los juegos del hambre", "Suzanne Collins"));
+        libros.add(new Libro("467", "El codigo Da Vinci", "Dan Brown"));
+        libros.add(new Libro("468", "Las cronicas de Narnia", "C.S. Lewis"));
+        libros.add(new Libro("469", "La sombra del viento", "Carlos Ruiz Zafon"));
+        libros.add(new Libro("470", "El nombre del viento", "Patrick Rothfuss"));
+        libros.add(new Libro("471", "Fahrenheit 451", "Ray Bradbury"));
+        libros.add(new Libro("472", "La metamorfosis", "Franz Kafka"));
+        libros.add(new Libro("473", "El Hobbit", "J.R.R. Tolkien"));
+        libros.add(new Libro("474", "Dracula", "Bram Stoker"));
+        libros.add(new Libro("475", "Los miserables", "Victor Hugo"));
+        libros.add(new Libro("476", "La casa de los espiritus", "Isabel Allende"));
+
+        // Agregar estudiantes
+        usuarios.add(new Usuario(1, "Ana Martinez", "Estudiante"));
+        usuarios.add(new Usuario(2, "Carlos Rodriguez", "Estudiante"));
+        usuarios.add(new Usuario(3, "Sofia Garcia", "Estudiante"));
+        usuarios.add(new Usuario(4, "Diego Lopez", "Estudiante"));
+        usuarios.add(new Usuario(5, "Valentina Torres", "Estudiante"));
+        usuarios.add(new Usuario(6, "Sebastian Ramirez", "Estudiante"));
+        usuarios.add(new Usuario(7, "Camila Flores", "Estudiante"));
+        usuarios.add(new Usuario(8, "Andres Herrera", "Estudiante"));
+        usuarios.add(new Usuario(9, "Isabella Morales", "Estudiante"));
+        usuarios.add(new Usuario(10, "Lucas Jimenez", "Estudiante"));
+        usuarios.add(new Usuario(11, "Emma Vargas", "Estudiante"));
+        usuarios.add(new Usuario(12, "Mateo Castro", "Estudiante"));
+        usuarios.add(new Usuario(13, "Victoria Rios", "Estudiante"));
+        usuarios.add(new Usuario(14, "Nicolas Silva", "Estudiante"));
+        usuarios.add(new Usuario(15, "Lucia Mendoza", "Estudiante"));
+        usuarios.add(new Usuario(16, "Daniel Ortiz", "Estudiante"));
+        usuarios.add(new Usuario(17, "Paula Guerrero", "Estudiante"));
+        usuarios.add(new Usuario(18, "Gabriel Sanchez", "Estudiante"));
+        usuarios.add(new Usuario(19, "Mariana Perez", "Estudiante"));
+        usuarios.add(new Usuario(20, "Samuel Romero", "Estudiante"));
+
+        // Agregar personal Staff
+        usuarios.add(new Usuario(21, "Carmen Molina", "Staff"));
+        usuarios.add(new Usuario(22, "Jorge Navarro", "Staff"));
+        usuarios.add(new Usuario(23, "Patricia Delgado", "Staff"));
+        usuarios.add(new Usuario(24, "Roberto Medina", "Staff"));
+        usuarios.add(new Usuario(25, "Elena Fuentes", "Staff"));
+        usuarios.add(new Usuario(26, "Fernando Cruz", "Staff"));
+        usuarios.add(new Usuario(27, "Laura Vega", "Staff"));
+        usuarios.add(new Usuario(28, "Miguel Angel Rojas", "Staff"));
+        usuarios.add(new Usuario(29, "Beatriz Soto", "Staff"));
+        usuarios.add(new Usuario(30, "Ricardo Aguirre", "Staff"));
         
-        usuarios.add(new Usuario(1, "Juan Perez", "Estudiante"));
-        usuarios.add(new Usuario(2, "Maria Lopez", "Staff"));
-        
+        // Agregar bibliotecario
         bibliotecarios.add(new Bibliotecario(1, "Carlos Ruiz"));
     }
 
-    private static void consultarCatalogo() {
-        System.out.println("\n=== CATALOGO DE LIBROS ===");
-        for (Libro libro : libros) {
-            System.out.printf("ISBN: %s | Titulo: %s | Autor: %s | Estado: %s%n",
-                libro.getIsbn(), libro.getTitulo(), libro.getAutor(), libro.getEstado());
-        }
+    public List<Libro> getLibros() {
+        return new ArrayList<>(libros);
     }
 
-    private static void realizarPrestamo() {
-        System.out.println("\n=== REALIZAR PRESTAMO ===");
+    public List<Usuario> getUsuarios() {
+        return new ArrayList<>(usuarios);
+    }
+
+    public List<Libro> getLibrosDisponibles() {
+        return libros.stream()
+            .filter(Libro::consultarDisponibilidad)
+            .collect(Collectors.toList());
+    }
+
+    public List<Libro> getLibrosPrestados() {
+        return libros.stream()
+            .filter(l -> !l.consultarDisponibilidad())
+            .collect(Collectors.toList());
+    }
+
+    public boolean realizarPrestamo(int userId, String isbn) {
+        Usuario usuario = encontrarUsuario(userId);
+        Libro libro = encontrarLibro(isbn);
         
-        // Mostrar usuarios disponibles
-        System.out.println("Usuarios disponibles:");
-        for (Usuario usuario : usuarios) {
-            System.out.printf("%d - %s (%s)%n", usuario.getId(), usuario.getNombre(), usuario.getTipo());
-        }
-        System.out.print("Seleccione ID de usuario: ");
-        int userId = scanner.nextInt();
-        scanner.nextLine();
-
-        // Buscar usuario
-        Usuario usuario = usuarios.stream()
-            .filter(u -> u.getId() == userId)
-            .findFirst()
-            .orElse(null);
-
-        if (usuario == null) {
-            System.out.println("Usuario no encontrado");
-            return;
-        }
-
-        // Mostrar libros disponibles
-        System.out.println("Libros disponibles:");
-        for (Libro libro : libros) {
-            if (libro.consultarDisponibilidad()) {
-                System.out.printf("ISBN: %s - %s%n", libro.getIsbn(), libro.getTitulo());
+        if (usuario != null && libro != null && libro.consultarDisponibilidad()) {
+            Prestamo prestamo = usuario.solicitarPrestamo(libro);
+            if (prestamo != null) {
+                guardarDatos();
+                return true;
             }
         }
-        
-        System.out.print("Ingrese ISBN del libro: ");
-        String isbn = scanner.nextLine();
+        return false;
+    }
 
-        // Buscar libro
-        Libro libro = libros.stream()
+    public boolean devolverLibro(String isbn) {
+        Libro libro = encontrarLibro(isbn);
+        if (libro != null && !libro.consultarDisponibilidad()) {
+            libro.actualizarEstado("Disponible");
+            guardarDatos();
+            return true;
+        }
+        return false;
+    }
+
+    public List<Libro> buscarLibros(String texto) {
+        final String busqueda = texto.toLowerCase();
+        return libros.stream()
+            .filter(l -> l.getTitulo().toLowerCase().contains(busqueda) ||
+                        l.getAutor().toLowerCase().contains(busqueda) ||
+                        l.getIsbn().toLowerCase().contains(busqueda))
+            .collect(Collectors.toList());
+    }
+
+    public List<Usuario> buscarUsuarios(String texto) {
+        final String busqueda = texto.toLowerCase();
+        return usuarios.stream()
+            .filter(u -> u.getNombre().toLowerCase().contains(busqueda) ||
+                        String.valueOf(u.getId()).contains(busqueda))
+            .collect(Collectors.toList());
+    }
+
+    private Usuario encontrarUsuario(int id) {
+        return usuarios.stream()
+            .filter(u -> u.getId() == id)
+            .findFirst()
+            .orElse(null);
+    }
+
+    private Libro encontrarLibro(String isbn) {
+        return libros.stream()
             .filter(l -> l.getIsbn().equals(isbn))
             .findFirst()
             .orElse(null);
-
-        if (libro == null) {
-            System.out.println("Libro no encontrado");
-            return;
-        }
-
-        // Realizar prestamo
-        Prestamo prestamo = usuario.solicitarPrestamo(libro);
-        if (prestamo != null) {
-            System.out.println("Prestamo realizado con exito");
-        } else {
-            System.out.println("No se pudo realizar el prestamo");
-        }
     }
 
-    private static void devolverLibro() {
-        System.out.println("\n=== DEVOLVER LIBRO ===");
-        System.out.print("Ingrese ISBN del libro a devolver: ");
-        String isbn = scanner.nextLine();
-
-        Libro libro = libros.stream()
-            .filter(l -> l.getIsbn().equals(isbn))
-            .findFirst()
-            .orElse(null);
-
-        if (libro == null || libro.consultarDisponibilidad()) {
-            System.out.println("Libro no encontrado o ya esta disponible");
-            return;
-        }
-
-        libro.actualizarEstado("Disponible");
-        System.out.println("Libro devuelto con exito");
+    public void agregarLibro(String isbn, String titulo, String autor) {
+        Libro nuevoLibro = new Libro(isbn, titulo, autor);
+        libros.add(nuevoLibro);
+        guardarDatos();
     }
 
-    private static void agregarLibro() {
-        System.out.println("\n=== AGREGAR LIBRO ===");
-        System.out.print("ISBN: ");
-        String isbn = scanner.nextLine();
-        System.out.print("Titulo: ");
-        String titulo = scanner.nextLine();
-        System.out.print("Autor: ");
-        String autor = scanner.nextLine();
-
-        libros.add(new Libro(isbn, titulo, autor));
-        System.out.println("Libro agregado con exito");
-    }
-
-    private static void agregarUsuario() {
-        System.out.println("\n=== AGREGAR USUARIO ===");
-        System.out.print("Nombre: ");
-        String nombre = scanner.nextLine();
-        System.out.print("Tipo (Estudiante/Staff): ");
-        String tipo = scanner.nextLine();
-
-        try {
-            int nuevoId = usuarios.stream().mapToInt(Usuario::getId).max().orElse(0) + 1;
-            usuarios.add(new Usuario(nuevoId, nombre, tipo));
-            System.out.println("Usuario agregado con exito");
-        } catch (IllegalArgumentException e) {
-            System.out.println("Error: " + e.getMessage());
-        }
+    public void agregarUsuario(String nombre, String tipo) {
+        int nuevoId = usuarios.stream().mapToInt(Usuario::getId).max().orElse(0) + 1;
+        Usuario nuevoUsuario = new Usuario(nuevoId, nombre, tipo);
+        usuarios.add(nuevoUsuario);
+        guardarDatos();
     }
 }

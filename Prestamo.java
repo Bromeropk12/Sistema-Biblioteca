@@ -43,8 +43,12 @@ public class Prestamo {
         return activo;
     }
 
-    public double calcularMulta() {
-        if (!activo) return multa;
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void calcularMulta() {
+        if (!activo) return;
         
         Date hoy = new Date();
         if (hoy.after(fechaFin)) {
@@ -52,8 +56,9 @@ public class Prestamo {
             long diasRetraso = TimeUnit.DAYS.convert(diferencia, TimeUnit.MILLISECONDS);
             // Multa de $1000 por día de retraso
             multa = diasRetraso * 1000.0;
+            // Notificar al usuario sobre la multa
+            System.out.println("Usuario " + usuario.getNombre() + " tiene una multa de $" + multa);
         }
-        return multa;
     }
 
     public void cerrar() {
@@ -71,5 +76,18 @@ public class Prestamo {
         // Extender por 7 días más
         fechaFin = new Date(fechaFin.getTime() + TimeUnit.DAYS.toMillis(7));
         return true;
+    }
+
+    public Libro getLibro() {
+        return libro;
+    }
+
+    public void actualizarFechas(Date fechaInicio, Date fechaFin) {
+        this.fechaInicio = fechaInicio;
+        this.fechaFin = fechaFin;
+    }
+
+    public void actualizarMulta(double multa) {
+        this.multa = multa;
     }
 }
