@@ -121,23 +121,74 @@ public class BibliotecaGUI extends JFrame {
     private void inicializarPestanaPrestamos() {
         JPanel panelPrestamos = new JPanel(new BorderLayout());
         
-        // Panel de botones para préstamos
+        // Crear modelo de tabla para préstamos
+        DefaultTableModel modeloPrestamos = new DefaultTableModel(
+            new Object[]{"ID Usuario", "Nombre", "ISBN", "Título", "Fecha Fin", "Estado", "Multa", "Días Restantes"}, 
+            0
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        
+        JTable tablaPrestamos = new JTable(modeloPrestamos);
+        JScrollPane scrollPrestamos = new JScrollPane(tablaPrestamos);
+        
+        // Panel de botones
         JPanel botonesPrestamos = new JPanel();
         JButton btnNuevoPrestamo = new JButton("Nuevo Préstamo");
         JButton btnDevolverLibro = new JButton("Devolver Libro");
+        JButton btnRenovarPrestamo = new JButton("Renovar Préstamo");
+        JButton btnActualizar = new JButton("Actualizar");
         
         botonesPrestamos.add(btnNuevoPrestamo);
         botonesPrestamos.add(btnDevolverLibro);
+        botonesPrestamos.add(btnRenovarPrestamo);
+        botonesPrestamos.add(btnActualizar);
         
         // Eventos
         btnNuevoPrestamo.addActionListener(e -> mostrarDialogoNuevoPrestamo());
         btnDevolverLibro.addActionListener(e -> mostrarDialogoDevolverLibro());
+        btnRenovarPrestamo.addActionListener(e -> mostrarDialogoRenovarPrestamo());
+        btnActualizar.addActionListener(e -> actualizarTablaPrestamos(modeloPrestamos));
         
         panelPrestamos.add(botonesPrestamos, BorderLayout.NORTH);
+        panelPrestamos.add(scrollPrestamos, BorderLayout.CENTER);
         
         tabbedPane.addTab("Préstamos", panelPrestamos);
+        
+        // Actualizar la tabla inicialmente
+        actualizarTablaPrestamos(modeloPrestamos);
+        
+        // Configurar un temporizador para actualizar las multas cada minuto
+        Timer timer = new Timer(60000, e -> {
+            sistema.verificarMultas();
+            actualizarTablaPrestamos(modeloPrestamos);
+        });
+        timer.start();
     }
-    
+
+    private void actualizarTablaPrestamos(DefaultTableModel modelo) {
+        modelo.setRowCount(0);
+        for (Usuario usuario : sistema.getUsuarios()) {
+            for (Prestamo prestamo : usuario.getPrestamos()) {
+                if (prestamo.isActivo()) {
+                    modelo.addRow(new Object[]{
+                        usuario.getId(),
+                        usuario.getNombre(),
+                        prestamo.getLibro().getIsbn(),
+                        prestamo.getLibro().getTitulo(),
+                        new java.text.SimpleDateFormat("yyyy-MM-dd").format(prestamo.getFechaFin()),
+                        prestamo.getEstadoPrestamo(),
+                        String.format("$%.2f", prestamo.getMulta()),
+                        prestamo.getDiasRestantes()
+                    });
+                }
+            }
+        }
+    }
+
     private void mostrarDialogoAgregarLibro() {
         JDialog dialogo = new JDialog(this, "Agregar Libro", true);
         dialogo.setLayout(new GridLayout(4, 2, 5, 5));
@@ -308,6 +359,75 @@ public class BibliotecaGUI extends JFrame {
         dialogo.setVisible(true);
     }
     
+    private void mostrarDialogoRenovarPrestamo() {
+        JDialog dialogo = new JDialog(this, "Renovar Préstamo", true);
+        dialogo.setLayout(new GridLayout(4, 2, 5, 5));
+        
+        JComboBox<String> comboUsuarios = new JComboBox<>();
+        JComboBox<String> comboLibros = new JComboBox<>();
+        
+        // Llenar combo de usuarios
+        for (Usuario usuario : sistema.getUsuarios()) {
+            for (Prestamo prestamo : usuario.getPrestamos()) {
+                if (prestamo.isActivo() && prestamo.puedeRenovar()) {
+                    comboUsuarios.addItem(usuario.getId() + " - " + usuario.getNombre());
+                    break;
+                }
+            }
+        }
+        
+        // Listener para actualizar libros cuando se selecciona un usuario
+        comboUsuarios.addActionListener(e -> {
+            comboLibros.removeAllItems();
+            if (comboUsuarios.getSelectedItem() != null) {
+                int userId = Integer.parseInt(((String)comboUsuarios.getSelectedItem()).split(" - ")[0]);
+                Usuario usuario = sistema.getUsuarios().stream()
+                    .filter(u -> u.getId() == userId)
+                    .findFirst()
+                    .orElse(null);
+                    
+                if (usuario != null) {
+                    for (Prestamo prestamo : usuario.getPrestamos()) {
+                        if (prestamo.isActivo() && prestamo.puedeRenovar()) {
+                            comboLibros.addItem(prestamo.getLibro().getIsbn() + " - " + prestamo.getLibro().getTitulo());
+                        }
+                    }
+                }
+            }
+        });
+        
+        dialogo.add(new JLabel("Usuario:"));
+        dialogo.add(comboUsuarios);
+        dialogo.add(new JLabel("Libro:"));
+        dialogo.add(comboLibros);
+        
+        JButton btnRenovar = new JButton("Renovar");
+        JButton btnCancelar = new JButton("Cancelar");
+        
+        btnRenovar.addActionListener(e -> {
+            if (comboUsuarios.getSelectedItem() != null && comboLibros.getSelectedItem() != null) {
+                int userId = Integer.parseInt(((String)comboUsuarios.getSelectedItem()).split(" - ")[0]);
+                String isbn = ((String)comboLibros.getSelectedItem()).split(" - ")[0];
+                
+                if (sistema.renovarPrestamo(userId, isbn)) {
+                    JOptionPane.showMessageDialog(this, "Préstamo renovado exitosamente");
+                    dialogo.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(this, "No se pudo renovar el préstamo");
+                }
+            }
+        });
+        
+        btnCancelar.addActionListener(e -> dialogo.dispose());
+        
+        dialogo.add(btnRenovar);
+        dialogo.add(btnCancelar);
+        
+        dialogo.pack();
+        dialogo.setLocationRelativeTo(this);
+        dialogo.setVisible(true);
+    }
+
     private void actualizarTablaLibros() {
         modeloLibros.setRowCount(0);
         for (Libro libro : sistema.getLibros()) {
@@ -373,7 +493,7 @@ public class BibliotecaGUI extends JFrame {
     }
 
     private static void setUIFont(javax.swing.plaf.FontUIResource f) {
-        java.util.Enumeration keys = UIManager.getDefaults().keys();
+        java.util.Enumeration<?> keys = UIManager.getDefaults().keys();
         while (keys.hasMoreElements()) {
             Object key = keys.nextElement();
             Object value = UIManager.get(key);

@@ -10,55 +10,62 @@ public class Prestamo {
     private Date fechaFin;
     private double multa;
     private boolean activo;
+    private boolean renovado;
+    private int numeroRenovaciones;
+    private static final double MULTA_POR_DIA = 1000.0;
+    private static final int DIAS_PRESTAMO = 14;
+    private static final int DIAS_RENOVACION = 7;
 
     public Prestamo(Usuario usuario, Libro libro) {
         this.id = contadorId++;
         this.usuario = usuario;
         this.libro = libro;
         this.fechaInicio = new Date();
-        // Por defecto, el préstamo es por 14 días
-        this.fechaFin = new Date(fechaInicio.getTime() + TimeUnit.DAYS.toMillis(14));
+        this.fechaFin = calcularFechaFin(DIAS_PRESTAMO);
         this.multa = 0.0;
         this.activo = true;
+        this.renovado = false;
+        this.numeroRenovaciones = 0;
     }
 
-    // Getters
-    public int getId() {
-        return id;
+    private Date calcularFechaFin(int dias) {
+        return new Date(new Date().getTime() + TimeUnit.DAYS.toMillis(dias));
     }
 
-    public Date getFechaInicio() {
-        return new Date(fechaInicio.getTime());
+    public boolean puedeRenovar() {
+        return activo && !renovado && new Date().before(fechaFin) && multa == 0;
     }
 
-    public Date getFechaFin() {
-        return new Date(fechaFin.getTime());
-    }
-
-    public double getMulta() {
-        return multa;
-    }
-
-    public boolean isActivo() {
-        return activo;
-    }
-
-    public Usuario getUsuario() {
-        return usuario;
-    }
-
-    public void calcularMulta() {
-        if (!activo) return;
+    public double calcularMulta() {
+        if (!activo) return multa;
         
         Date hoy = new Date();
         if (hoy.after(fechaFin)) {
             long diferencia = hoy.getTime() - fechaFin.getTime();
             long diasRetraso = TimeUnit.DAYS.convert(diferencia, TimeUnit.MILLISECONDS);
-            // Multa de $1000 por día de retraso
-            multa = diasRetraso * 1000.0;
-            // Notificar al usuario sobre la multa
-            System.out.println("Usuario " + usuario.getNombre() + " tiene una multa de $" + multa);
+            multa = diasRetraso * MULTA_POR_DIA;
+            return multa;
         }
+        return 0.0;
+    }
+
+    public boolean renovar() {
+        if (!puedeRenovar()) {
+            return false;
+        }
+        fechaFin = calcularFechaFin(DIAS_RENOVACION);
+        renovado = true;
+        numeroRenovaciones++;
+        return true;
+    }
+
+    public int getNumeroRenovaciones() {
+        return numeroRenovaciones;
+    }
+
+    public void actualizarEstadoRenovacion(boolean renovado, int numeroRenovaciones) {
+        this.renovado = renovado;
+        this.numeroRenovaciones = numeroRenovaciones;
     }
 
     public void cerrar() {
@@ -69,18 +76,15 @@ public class Prestamo {
         }
     }
 
-    public boolean renovar() {
-        if (!activo || new Date().after(fechaFin)) {
-            return false;
-        }
-        // Extender por 7 días más
-        fechaFin = new Date(fechaFin.getTime() + TimeUnit.DAYS.toMillis(7));
-        return true;
-    }
-
-    public Libro getLibro() {
-        return libro;
-    }
+    // Getters
+    public int getId() { return id; }
+    public Date getFechaInicio() { return new Date(fechaInicio.getTime()); }
+    public Date getFechaFin() { return new Date(fechaFin.getTime()); }
+    public double getMulta() { return multa; }
+    public boolean isActivo() { return activo; }
+    public Libro getLibro() { return libro; }
+    public Usuario getUsuario() { return usuario; }
+    public boolean isRenovado() { return renovado; }
 
     public void actualizarFechas(Date fechaInicio, Date fechaFin) {
         this.fechaInicio = fechaInicio;
@@ -89,5 +93,34 @@ public class Prestamo {
 
     public void actualizarMulta(double multa) {
         this.multa = multa;
+    }
+
+    public long getDiasRestantes() {
+        Date hoy = new Date();
+        if (hoy.after(fechaFin)) return 0;
+        return TimeUnit.DAYS.convert(fechaFin.getTime() - hoy.getTime(), TimeUnit.MILLISECONDS);
+    }
+
+    public String getEstadoPrestamo() {
+        if (!activo) return "Devuelto";
+        if (new Date().after(fechaFin)) return "Vencido";
+        return "Activo";
+    }
+
+    public static void actualizarContador(int nuevoContador) {
+        contadorId = Math.max(contadorId, nuevoContador + 1);
+    }
+
+    public void setId(int id) {
+        this.id = id;
+        actualizarContador(id);
+    }
+
+    public void actualizarEstado(String estado) {
+        if ("Devuelto".equals(estado)) {
+            this.activo = false;
+        } else {
+            this.activo = true;
+        }
     }
 }

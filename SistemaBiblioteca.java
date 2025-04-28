@@ -129,14 +129,78 @@ public class SistemaBiblioteca {
         return false;
     }
 
+    public void verificarMultas() {
+        for (Usuario usuario : usuarios) {
+            for (Prestamo prestamo : usuario.getPrestamos()) {
+                if (prestamo.isActivo()) {
+                    prestamo.calcularMulta();
+                }
+            }
+        }
+    }
+
     public boolean devolverLibro(String isbn) {
         Libro libro = encontrarLibro(isbn);
         if (libro != null && !libro.consultarDisponibilidad()) {
-            libro.actualizarEstado("Disponible");
-            guardarDatos();
-            return true;
+            Usuario usuario = encontrarUsuarioPorLibro(isbn);
+            if (usuario != null) {
+                Prestamo prestamo = encontrarPrestamoPorLibro(usuario, isbn);
+                if (prestamo != null) {
+                    prestamo.calcularMulta();  // Calculamos la multa final
+                    prestamo.cerrar();
+                    libro.actualizarEstado("Disponible");
+                    guardarDatos();
+                    return true;
+                }
+            }
         }
         return false;
+    }
+
+    private Usuario encontrarUsuarioPorLibro(String isbn) {
+        for (Usuario usuario : usuarios) {
+            for (Prestamo prestamo : usuario.getPrestamos()) {
+                if (prestamo.isActivo() && prestamo.getLibro().getIsbn().equals(isbn)) {
+                    return usuario;
+                }
+            }
+        }
+        return null;
+    }
+
+    private Prestamo encontrarPrestamoPorLibro(Usuario usuario, String isbn) {
+        for (Prestamo prestamo : usuario.getPrestamos()) {
+            if (prestamo.isActivo() && prestamo.getLibro().getIsbn().equals(isbn)) {
+                return prestamo;
+            }
+        }
+        return null;
+    }
+
+    public boolean renovarPrestamo(int userId, String isbn) {
+        Usuario usuario = encontrarUsuario(userId);
+        if (usuario != null) {
+            Prestamo prestamo = encontrarPrestamoPorLibro(usuario, isbn);
+            if (prestamo != null && prestamo.puedeRenovar()) {
+                boolean renovado = prestamo.renovar();
+                if (renovado) {
+                    guardarDatos();
+                }
+                return renovado;
+            }
+        }
+        return false;
+    }
+
+    public double consultarMulta(int userId, String isbn) {
+        Usuario usuario = encontrarUsuario(userId);
+        if (usuario != null) {
+            Prestamo prestamo = encontrarPrestamoPorLibro(usuario, isbn);
+            if (prestamo != null) {
+                return prestamo.getMulta();
+            }
+        }
+        return 0.0;
     }
 
     public List<Libro> buscarLibros(String texto) {
